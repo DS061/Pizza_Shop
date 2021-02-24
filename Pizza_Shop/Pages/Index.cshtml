@@ -1,0 +1,268 @@
+﻿@page
+@model Pizza_Shop.Pages.IndexModel
+@{
+}
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Shop</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+</head>
+<body>
+
+    <div>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+            <a class="navbar-brand" href="#">Shop Prices </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarText" aria-controls="navbarText" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarText">
+                <ul class="navbar-nav mr-auto">
+                    <li class="nav-item active">
+
+                    </li>
+
+                </ul>
+
+            </div>
+        </nav>
+
+
+        <div class="container">
+            <button class="btn btn-dark rounded-circle" data-toggle="modal" data-target="#addShop">&#43;</button><span class="text-dark">Add</span>
+            <table class="table table-striped  table-warning table-bordered rounded">
+                <thead class="thead-dark rounded">
+                    <tr class="rounded">
+                        <th scope="col">Shop</th>
+                        <th scope="col">Price </th>
+                        <th scope="col">Number of stocks</th>
+
+
+                    </tr>
+                </thead>
+                <tbody id="shops">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+
+
+
+
+
+    <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
+    <script src="https://ajax.aspnetcdn.com/ajax/jquery.templates/beta1/jquery.tmpl.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+    <script>
+        var uri = ' api/Shops';
+        $(document).ready(function () {
+            // Gets all shop records
+            $.getJSON(uri)
+                .done(function (data) {
+                    $("#shopTemplate").tmpl(data).appendTo("#shops");
+                });
+        });
+        function getAllShops() {
+               $.getJSON(uri)
+                   .done(function (data) {
+                       $("#shops").text("");
+                    $("#shopTemplate").tmpl(data).appendTo("#shops");
+                });
+        }
+        function addShop() {
+            var _shop = $('#shop').val();
+            var _price = $('#price').val();
+            var _number_of_stocks = parseInt($('#number_of_stocks').val());
+
+
+            var shop = {
+                numberofstocks: parseInt(_number_of_stocks),
+                price:parseFloat( _price),
+                shop:  _shop
+
+
+            };
+            $.ajax({
+                type: "POST",
+                url: uri,
+                data: JSON.stringify(shop),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#result").html("Added a shop record");
+                getAllShops();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#result").html("Error adding shop");
+               });
+        }
+        function updateShop() {
+              var _shop = $('#_shop').val();
+            var _price = $('#_price').val();
+            var _number_of_stocks = parseInt($('#_number_of_stocks').val());
+
+            var shop = {
+                id : parseInt($('#_id').val()),
+                numberOfStocks: _number_of_stocks,
+                price: parseFloat( _price),
+                shop:  _shop
+
+
+            };
+            $.ajax({
+                type: "PUT",
+                url: uri+"/"+ $('#_id').val(),
+                data: JSON.stringify(shop),
+                contentType: "application/json; charset=utf-8"
+            }).done(function (response) {
+                $("#resultUpdate").html("Updated shop");
+                getAllShops();
+            }).fail(function (jqXHR, textStatus) {
+                          $("#resultUpdate").html("Error updating shop");
+               });;
+        }
+        function remove(id) {
+          var yes =  confirm("Delete this shop item?");
+            if (yes) {
+                $.ajax({
+                    type: "DELETE",
+                    url: uri + "/" + id,
+                }).done(function (response) {
+                    getAllShops();
+                });
+            }
+        }
+
+        function getShop(id) {
+             $.ajax({
+                type: "GET",
+                url: uri+"/"+id,
+               contentType: "application/json"
+             }).done(function (response) {
+                  $('#_id').val(response.id);
+                 $('#_price').val(response.price) ;
+                 $('#_shop').val(response.shop);
+                 $('#_number_of_shops').val(response.numberOfshops);
+
+
+            });
+        }
+    </script>
+
+
+
+    <script id="shopTemplate" type="text/x-jquery-tmpl">
+
+        <tr>
+            <td> ${shop}</td>
+            <td>${price}</td>
+            <td>${numberOfStocks}</td>
+
+            <td> <button class="btn btn-outline-primary" onclick="getShop('${id}')" data-toggle="modal" data-target="#updateShop">Update</button></td>
+            <td> <a href="#" class="btn btn-outline-danger" onclick="remove('${id}')">Delete</a></td>
+        </tr>
+    </script>
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="addShop">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Enter Shop</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="name">Shop</label>
+                            <input type="text" class="form-control" id="shop" aria-describedby="emailHelp" placeholder="Shop">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Price</label>
+                            <input type="number" class="form-control" id="price" aria-describedby="emailHelp" placeholder="Price">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Number Of Stocks</label>
+                            <input type="number" class="form-control" id="number_of_stocks" aria-describedby="emailHelp" placeholder="Number of stocks">
+
+                        </div>
+
+
+                        <div class="form-group" id="result">
+
+
+                        </div>
+                        <button type="button" onclick="addShop()" class="btn btn-primary">Submit</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+
+    <div class="modal" tabindex="-1" role="dialog" id="updateShop">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Update Shop Record</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+
+                        <div class="form-group">
+
+                            <input type="hidden" class="form-control" id="_id" aria-describedby="emailHelp">
+
+                        </div>
+
+                        <div class="form-group">
+                            <label for="name">Shop</label>
+                            <input type="text" class="form-control" id="_shop" aria-describedby="emailHelp" placeholder="Shop">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Price</label>
+                            <input type="number" class="form-control" id="_price" aria-describedby="emailHelp" placeholder="Price">
+
+                        </div>
+                        <div class="form-group">
+                            <label for="model">Number Of Stocks</label>
+                            <input type="number" class="form-control" id="_number_of_stocks" aria-describedby="emailHelp" placeholder="Number of stocks">
+
+                        </div>
+
+
+
+                        <div class="form-group" id="resultUpdate">
+
+
+                        </div>
+                        <button type="button" onclick="updateShop()" class="btn btn-primary">Update Shop Record</button>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
